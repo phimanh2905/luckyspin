@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>J2Team Community Offline</title>
+    <title>Vòng Xoay May Mắn Ban CNTT</title>
     <link rel="stylesheet" href="css/typo/typo.css" />
     <link rel="stylesheet" href="css/hc-canvas-luckwheel.css" />
     <style>
@@ -28,6 +28,14 @@
       </section>
       <section id="numberPrizes" class="number-prizes">
         
+        <ul id="prizes"> <b>Cơ cấu giải thưởng</b>
+          <li id="prize-1">1</li>
+          <li id="prize-2">2</li>
+          <li id="prize-3">3</li>
+          <li id="prize-4">4</li>
+          <li id="prize-5">5</li>
+        </ul>
+
       </section>
     </div>
 </style>
@@ -37,35 +45,36 @@
       var prizes = [
               {
                 text: "200k",
-                img: "images/Ao.png",
+                id: "prize-1",
                 number: 1, // 1%,
                 percentpage: 0.01 // 1%
               },
               {
                 text: "100k",
-                img: "images/Ao.png",
+                id: "prize-2",
                 number: 1, // 1%,
                 percentpage: 0.03 // 1%
               },
               {
                 text: "50k",
-                img: "images/Non.png",
+                id: "prize-3",
                 number: 2,
                 percentpage: 0.1 // 5%
               },
               {
                 text: "20k",
-                img: "images/Vong.png",
-                number : 4,
+                id: "prize-4",
+                number : 5,
                 percentpage: 0.3 // 10%
               },
               {
                 text: "10k",
-                img: "images/j2_logo.png",
-                number: 10,
+                id: "prize-5",
+                number: 5,
                 percentpage: 0.6 // 24%
               }
             ];
+            
       document.addEventListener(
         "DOMContentLoaded",
         function() {
@@ -74,6 +83,7 @@
             config: function(callback) {
               callback &&
                 callback(prizes);
+                initPrizes(prizes);
             },
             mode : "both",
             getPrize: function(callback) {
@@ -81,24 +91,29 @@
               var chances = rand;
               callback && callback([rand, chances]);
             },
-            gotBack: function(data) {
-              
-              if(data == null){
+            gotBack: function(prize) {
+              if(prize==null){
                 Swal.fire(
                   'Chương trình kết thúc',
                   'Đã hết phần thưởng',
                   'error'
                 )
-              } else if (data == 'Chúc bạn may mắn lần sau'){
-                Swal.fire(
-                  'Bạn không trúng thưởng',
-                  data,
-                  'error'
-                )
               } else{
+                const element= document.getElementById(`${prize.id}`);
+                if(element){
+                  element.innerHTML= `${prize.number} giải ${prize.text}`;
+                }
+                
+                if(prize.number==0){
+                  if(element){
+                    setTimeout(() => {
+                      element.remove();
+                    }, 3*1000);
+                  }
+                }
                 Swal.fire(
                   'Bạn đã trúng giải',
-                  data,
+                  prize.text,
                   'success'
                 )
               }
@@ -107,47 +122,68 @@
         },
         false
       );
+      function initPrizes(prizes){
+        prizes.forEach(prize => {
+          document.getElementById(`${prize.id}`).innerHTML= `${prize.number} giải ${prize.text}`;
+        });
+        
+      }
+
       function randomIndex(prizes){
-          var counter = 1;
-          for (let i = 0; i < prizes.length; i++) {
-            if(prizes[i].number == 0){
-              counter++
-            }
-          }
-          if(counter == prizes.length){
+          if(prizes.filter(x=>x.number > 0).length ==0){
             return null
           }
           let rand = Math.random();
           let prizeIndex = null;
-          console.log(rand);
           switch (true) {
-            case rand < prizes[4].percentpage:
+            case rand < prizes[4].percentpage && prizes[4].number > 0:
               prizeIndex = 4 ;
               break;
-            case rand < prizes[4].percentpage + prizes[3].percentpage:
+            case (rand < prizes[4].percentpage + prizes[3].percentpage) &&prizes[4].number >0 && prizes[3].number > 0:
               prizeIndex = 3;
               break;
-            case rand < prizes[4].percentpage + prizes[3].percentpage + prizes[2].percentpage:
+            case (rand < prizes[4].percentpage + prizes[3].percentpage + prizes[2].percentpage)
+              &&prizes[4].number > 0 && prizes[3].number > 0&& prizes[2].number > 0:
               prizeIndex = 2;
               break;
-            case rand < prizes[4].percentpage + prizes[3].percentpage + prizes[2].percentpage + prizes[1].percentpage:
+            case (rand < prizes[4].percentpage + prizes[3].percentpage + prizes[2].percentpage + prizes[1].percentpage)
+              &&prizes[4].number > 0 && prizes[3].number > 0&& prizes[2].number > 0&&prizes[1].number >0:
               prizeIndex = 1;
               break;  
-            case rand < prizes[4].percentpage + prizes[3].percentpage + prizes[2].percentpage + prizes[1].percentpage  + prizes[0].percentpage:
+            case (rand < prizes[4].percentpage + prizes[3].percentpage + prizes[2].percentpage + prizes[1].percentpage  + prizes[0].percentpage) 
+            &&prizes[4].number > 0 && prizes[3].number > 0&& prizes[2].number > 0&&prizes[1].number > 0 &&prizes[0].number > 0 :
               prizeIndex = 0;
               break;  
           }
-          if(prizes[prizeIndex].number != 0){
-            prizes[prizeIndex].number = prizes[prizeIndex].number - 1
+          
+          if(prizeIndex != null && prizes[prizeIndex].number > 0){
+            prizes[prizeIndex].number = prizes[prizeIndex].number - 1;
             return prizeIndex;
           }
-          return randomInArray([2,3,4]);
+          
+          prizeRandom= randomInArray(prizes);
+          let prize = prizes.find(x=>x.id==prizeRandom.id);
+          prize.number = prize.number - 1;
+          return prizes.map(x=>x.id).indexOf(prizeRandom.id);
       }
 
       function randomInArray(arr){
-        if (arr && arr.length) {
-          return arr[Math.floor(Math.random() * arr.length)];
+        const arr1= arr.filter(x=>x.number > 0);
+        if(arr1 && arr1.length==1){
+          return arr1[0];
         }
+        if (arr1 && arr1.length > 1) {
+          return arr1[Math.floor(Math.random() * arr1.length)];
+        }
+      }
+
+      function sumArrary(arr){
+        const initialValue = 0;
+        const sumWithInitial = arr.reduce(
+          (accumulator, currentValue) => accumulator + currentValue,
+          initialValue
+        );
+        return sumWithInitial;
       }
     </script>
   </body>
